@@ -1,0 +1,16 @@
+{
+  "name": "ai-mockup-generator",
+  "version": "1.0.0",
+  "description": "A secure backend for the AI Mockup Generator.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": "18.x"
+  }
+}
+
