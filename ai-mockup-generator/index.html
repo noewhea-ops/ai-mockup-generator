@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Mockup Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .file-drop-zone {
+            border-style: dashed;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .file-drop-zone.drag-over {
+            background-color: #eef2ff;
+            border-color: #4f46e5;
+        }
+        .loader {
+            border-top-color: #4f46e5;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .suggestion-box {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            z-index: 50;
+        }
+        .suggestion-item:hover {
+            background-color: #f3f4f6;
+        }
+        .history-thumbnail {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            border: 2px solid transparent;
+        }
+        .history-thumbnail:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .history-thumbnail.active {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
+        <!-- Header Section -->
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-gray-900">AI Mockup Generator</h1>
+            <p class="mt-2 text-lg text-gray-600">Create stunning product photos with AI</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Panel: Controls -->
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                <div class="space-y-6">
+                    <!-- Step 1: Upload -->
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900 mb-2">1. Upload Your Art</h2>
+                        <div id="drop-zone" class="file-drop-zone w-full p-6 text-center border-2 border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                            <input type="file" id="file-input" class="hidden" accept="image/png, image/jpeg, image/webp">
+                            <div id="upload-prompt">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <p class="mt-2 text-sm text-gray-600">
+                                    <span class="font-semibold text-indigo-600">Click to upload</span> or drag and drop
+                                </p>
+                                <p class="text-xs text-gray-500">PNG, JPG, or WEBP</p>
+                            </div>
+                            <div id="file-preview" class="hidden flex flex-col items-center">
+                                <img id="preview-image" src="" alt="Image preview" class="max-h-24 rounded-md mb-2">
+                                <p id="file-name" class="text-sm font-medium text-gray-700"></p>
+                                <button id="remove-file-btn" class="text-xs text-red-500 hover:underline mt-1">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Customize Scene -->
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4">2. Customize Your Scene</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="product-type" class="block text-sm font-medium text-gray-700">Product Type</label>
+                                <div class="mt-1 relative">
+                                    <input type="text" id="product-type" class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-10" placeholder="e.g., black cotton t-shirt on a hanger">
+                                    <button class="magic-wand-btn absolute inset-y-0 right-0 flex items-center pr-3" data-target="product-type">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 hover:text-indigo-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586zM12 6a1 1 0 100-2 1 1 0 000 2zM12 10a1 1 0 100-2 1 1 0 000 2zM12 14a1 1 0 100-2 1 1 0 000 2zM10 8a1 1 0 100-2 1 1 0 000 2zM6 8a1 1 0 100-2 1 1 0 000 2zM8 6a1 1 0 100-2 1 1 0 000 2zM8 10a1 1 0 100-2 1 1 0 000 2z"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="aesthetic" class="block text-sm font-medium text-gray-700">Aesthetic & Environment</label>
+                                <div class="mt-1 relative">
+                                    <input type="text" id="aesthetic" class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-10" placeholder="e.g., clean minimalist studio with neutral tones">
+                                     <button class="magic-wand-btn absolute inset-y-0 right-0 flex items-center pr-3" data-target="aesthetic">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 hover:text-indigo-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586zM12 6a1 1 0 100-2 1 1 0 000 2zM12 10a1 1 0 100-2 1 1 0 000 2zM12 14a1 1 0 100-2 1 1 0 000 2zM10 8a1 1 0 100-2 1 1 0 000 2zM6 8a1 1 0 100-2 1 1 0 000 2zM8 6a1 1 0 100-2 1 1 0 000 2zM8 10a1 1 0 100-2 1 1 0 000 2z"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="photography" class="block text-sm font-medium text-gray-700">Photography Style</label>
+                                <div class="mt-1 relative">
+                                    <input type="text" id="photography" class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-10" placeholder="e.g., soft, diffused natural light from a window">
+                                    <button class="magic-wand-btn absolute inset-y-0 right-0 flex items-center pr-3" data-target="photography">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 hover:text-indigo-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586zM12 6a1 1 0 100-2 1 1 0 000 2zM12 10a1 1 0 100-2 1 1 0 000 2zM12 14a1 1 0 100-2 1 1 0 000 2zM10 8a1 1 0 100-2 1 1 0 000 2zM6 8a1 1 0 100-2 1 1 0 000 2zM8 6a1 1 0 100-2 1 1 0 000 2zM8 10a1 1 0 100-2 1 1 0 000 2z"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="props" class="block text-sm font-medium text-gray-700">Props & Composition</label>
+                                <div class="mt-1 relative">
+                                    <input type="text" id="props" class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm pr-10" placeholder="e.g., simple & clean with minimal props">
+                                    <button class="magic-wand-btn absolute inset-y-0 right-0 flex items-center pr-3" data-target="props">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 hover:text-indigo-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586zM12 6a1 1 0 100-2 1 1 0 000 2zM12 10a1 1 0 100-2 1 1 0 000 2zM12 14a1 1 0 100-2 1 1 0 000 2zM10 8a1 1 0 100-2 1 1 0 000 2zM6 8a1 1 0 100-2 1 1 0 000 2zM8 6a1 1 0 100-2 1 1 0 000 2zM8 10a1 1 0 100-2 1 1 0 000 2z"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="tech-specs" class="block text-sm font-medium text-gray-700">Technical Specifications <span class="text-gray-500">(Optional)</span></label>
+                                <input type="text" id="tech-specs" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="e.g., 4:3 aspect ratio, high resolution">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Generate Button -->
+                    <button id="generate-btn" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300 disabled:cursor-not-allowed">
+                        <span id="btn-text">Generate Mockup</span>
+                        <div id="btn-loader" class="hidden loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-6 w-6"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Mockup Preview -->
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg flex items-center justify-center min-h-[400px] lg:min-h-full">
+                <div id="mockup-container" class="w-full h-full flex flex-col items-center justify-center text-center">
+                    <div id="mockup-placeholder" class="text-gray-500">
+                        <svg class="mx-auto h-16 w-16 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                        </svg>
+                        <h3 class="mt-4 text-lg font-semibold text-gray-900">Your mockup will appear here</h3>
+                        <p class="mt-1 text-sm text-gray-500">Upload your art and set the scene to get started.</p>
+                    </div>
+                     <img id="mockup-image" src="" alt="Generated Mockup" class="hidden max-w-full max-h-full object-contain rounded-lg">
+                     <button id="download-btn" class="hidden mt-4 py-2 px-5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 inline-block" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        Download Image
+                     </button>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Generation History -->
+        <section id="history-section" class="hidden mt-10">
+            <h2 class="text-2xl font-bold text-center text-gray-900 mb-6">Generation History</h2>
+            <div id="history-gallery" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                <!-- History images will be populated here -->
+            </div>
+        </section>
+
+        <!-- Error Message Toast -->
+        <div id="error-toast" class="hidden fixed bottom-5 right-5 bg-red-500 text-white py-2 px-4 rounded-lg shadow-xl animate-pulse">
+            <span id="error-message"></span>
+        </div>
+
+    </div>
+    
+    <!-- Suggestion Box -->
+    <div id="suggestion-box" class="hidden absolute bg-white border border-gray-200 rounded-lg suggestion-box w-64">
+        <div id="suggestion-list" class="p-2 space-y-1">
+            <!-- Suggestions will be populated here -->
+        </div>
+    </div>
+
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const uploadPrompt = document.getElementById('upload-prompt');
+        const filePreview = document.getElementById('file-preview');
+        const previewImage = document.getElementById('preview-image');
+        const fileNameElement = document.getElementById('file-name');
+        const removeFileBtn = document.getElementById('remove-file-btn');
+        const generateBtn = document.getElementById('generate-btn');
+        const btnText = document.getElementById('btn-text');
+        const btnLoader = document.getElementById('btn-loader');
+        const mockupContainer = document.getElementById('mockup-container');
+        const mockupPlaceholder = document.getElementById('mockup-placeholder');
+        const mockupImage = document.getElementById('mockup-image');
+        const downloadBtn = document.getElementById('download-btn');
+        const errorToast = document.getElementById('error-toast');
+        const errorMessage = document.getElementById('error-message');
+        const suggestionBox = document.getElementById('suggestion-box');
+        const suggestionList = document.getElementById('suggestion-list');
+        const historySection = document.getElementById('history-section');
+        const historyGallery = document.getElementById('history-gallery');
+
+        let uploadedFile = null;
+        let fileBase64 = null;
+        let activeSuggestionTarget = null;
+        let generationHistory = [];
+        
+        const suggestions = {
+            'product-type': ['t-shirt on a hanger', 'hoodie flat lay', 'coffee mug on a table', 'canvas tote bag held by a model', 'poster on a wall', 'phone case on a desk'],
+            'aesthetic': ['clean minimalist studio', 'cozy cafe with warm lighting', 'rustic wooden background', 'sunny beach scene', 'urban city street', 'modern home office'],
+            'photography': ['soft, diffused natural light', 'dramatic studio lighting', 'golden hour sunlight', 'macro shot with shallow depth of field', 'vibrant and colorful', 'moody and cinematic'],
+            'props': ['with minimal props', 'surrounded by flowers and plants', 'with a laptop and coffee', 'and a stack of books', 'next to a window', 'on a textured fabric']
+        };
+
+        // --- File Upload and Drag-n-Drop Logic ---
+        
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        removeFileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            resetFileUpload();
+        });
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showError("Please upload an image file.");
+                return;
+            }
+            uploadedFile = file;
+            fileNameElement.textContent = file.name;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                fileBase64 = e.target.result.split(',')[1]; // Get base64 part
+                previewImage.src = e.target.result;
+                uploadPrompt.classList.add('hidden');
+                filePreview.classList.remove('hidden');
+            };
+            reader.onerror = () => {
+                showError("Failed to read the file.");
+                resetFileUpload();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetFileUpload() {
+            uploadedFile = null;
+            fileBase64 = null;
+            fileInput.value = ''; // Reset file input
+            uploadPrompt.classList.remove('hidden');
+            filePreview.classList.add('hidden');
+            previewImage.src = '';
+            fileNameElement.textContent = '';
+            mockupPlaceholder.classList.remove('hidden');
+            mockupImage.classList.add('hidden');
+            downloadBtn.classList.add('hidden');
+        }
+
+        // --- Mockup Generation Logic ---
+
+        generateBtn.addEventListener('click', generateMockup);
+
+        async function generateMockup() {
+            if (!uploadedFile || !fileBase64) {
+                showError("Please upload your artwork first.");
+                return;
+            }
+
+            const productType = document.getElementById('product-type').value.trim();
+            const aesthetic = document.getElementById('aesthetic').value.trim();
+            const photography = document.getElementById('photography').value.trim();
+            const props = document.getElementById('props').value.trim();
+            const techSpecs = document.getElementById('tech-specs').value.trim();
+            const fullPrompt = `Product Type: ${productType}. Aesthetic & Environment: ${aesthetic}. Photography Style: ${photography}. Props & Composition: ${props}. ${techSpecs ? `Technical Specifications: ${techSpecs}` : ''}`;
+            
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = `
+                <div class="loader w-5 h-5"></div>
+                Generating...
+            `;
+            
+            try {
+                // IMPORTANT: The API URL now points to our new backend endpoint.
+                const apiUrl = '/api/generate';
+
+                // We send a JSON object with all the required data.
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: fullPrompt,
+                        fileData: fileBase64,
+                        fileType: uploadedFile.type
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+                const base64Data = candidate?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+
+                if (!base64Data) {
+                    throw new Error("No image data found in the API response.");
+                }
+                
+                const imageDataUrl = `data:image/png;base64,${base64Data}`;
+                updateHistory(imageDataUrl);
+
+                mockupImage.src = imageDataUrl;
+                mockupPlaceholder.classList.add('hidden');
+                mockupImage.classList.remove('hidden');
+                downloadBtn.classList.remove('hidden');
+                renderHistory(0); // Highlight the newest item
+
+            } catch (error) {
+                console.error('API Error:', error);
+                showError(error.message || "Failed to generate mockup. Please try again.");
+                // Show placeholder again if generation fails
+                mockupPlaceholder.classList.remove('hidden');
+                mockupImage.classList.add('hidden');
+                downloadBtn.classList.add('hidden');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        async function makeApiCallWithRetry(url, payload, retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorBody = await response.json();
+                        throw new Error(`API request failed with status ${response.status}: ${errorBody.error?.message || 'Unknown error'}`);
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    if (i === retries - 1) throw error; // Last retry failed, throw error
+                    await new Promise(res => setTimeout(res, delay * Math.pow(2, i))); // Exponential backoff
+                }
+            }
+        }
+
+        // --- UI State Management ---
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                generateBtn.disabled = true;
+                btnText.classList.add('hidden');
+                btnLoader.classList.remove('hidden');
+            } else {
+                generateBtn.disabled = false;
+                btnText.classList.remove('hidden');
+                btnLoader.classList.add('hidden');
+            }
+        }
+        
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorToast.classList.remove('hidden');
+            setTimeout(() => {
+                errorToast.classList.add('hidden');
+            }, 3000);
+        }
+
+        downloadBtn.addEventListener('click', () => {
+            if (!mockupImage.src || mockupImage.classList.contains('hidden')) {
+                showError("No image to download.");
+                return;
+            }
+            const link = document.createElement('a');
+            link.href = mockupImage.src;
+            link.download = 'generated-mockup.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // --- Suggestion Box Logic ---
+        document.querySelectorAll('.magic-wand-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const targetId = button.dataset.target;
+                if (activeSuggestionTarget === targetId) {
+                    suggestionBox.classList.add('hidden');
+                    activeSuggestionTarget = null;
+                    return;
+                }
+                
+                activeSuggestionTarget = targetId;
+                populateSuggestions(targetId);
+                
+                const inputRect = document.getElementById(targetId).getBoundingClientRect();
+                suggestionBox.style.top = `${inputRect.bottom + window.scrollY + 5}px`;
+                suggestionBox.style.left = `${inputRect.left + window.scrollX}px`;
+                
+                suggestionBox.classList.remove('hidden');
+            });
+        });
+
+        function populateSuggestions(targetId) {
+            suggestionList.innerHTML = '';
+            const suggestionItems = suggestions[targetId] || [];
+            if (suggestionItems.length === 0) {
+                 suggestionList.innerHTML = '<p class="text-xs text-gray-500 px-2 py-1">No suggestions available.</p>';
+                 return;
+            }
+
+            suggestionItems.forEach(text => {
+                const item = document.createElement('div');
+                item.textContent = text;
+                item.className = 'suggestion-item text-sm text-gray-700 p-2 rounded-md cursor-pointer';
+                item.onclick = () => {
+                    const targetInput = document.getElementById(targetId);
+                    targetInput.value = targetInput.value ? `${targetInput.value}, ${text}` : text;
+                    suggestionBox.classList.add('hidden');
+                    activeSuggestionTarget = null;
+                };
+                suggestionList.appendChild(item);
+            });
+        }
+        
+        document.addEventListener('click', (e) => {
+            if (!suggestionBox.contains(e.target) && !e.target.closest('.magic-wand-btn')) {
+                suggestionBox.classList.add('hidden');
+                activeSuggestionTarget = null;
+            }
+        });
+
+        // --- History Logic ---
+        function updateHistory(imageDataUrl) {
+            // Add new image to the start of the array
+            generationHistory.unshift(imageDataUrl);
+            // Keep history limited to 8 items
+            if (generationHistory.length > 8) {
+                generationHistory.pop();
+            }
+        }
+        
+        function renderHistory(activeIndex = -1) {
+            if (generationHistory.length === 0) return;
+
+            historySection.classList.remove('hidden');
+            historyGallery.innerHTML = ''; // Clear previous items
+
+            generationHistory.forEach((imageDataUrl, index) => {
+                const img = document.createElement('img');
+                img.src = imageDataUrl;
+                img.alt = `Generated Mockup ${index + 1}`;
+                img.className = 'history-thumbnail w-full h-full object-cover rounded-lg cursor-pointer bg-gray-100';
+                
+                if (index === activeIndex) {
+                    img.classList.add('active');
+                }
+
+                img.addEventListener('click', () => {
+                    // Update main preview
+                    mockupImage.src = imageDataUrl;
+                    mockupPlaceholder.classList.add('hidden');
+                    mockupImage.classList.remove('hidden');
+                    downloadBtn.classList.remove('hidden');
+
+                    // Update active state in gallery
+                    renderHistory(index);
+                });
+                historyGallery.appendChild(img);
+            });
+        }
+
+
+    </script>
+</body>
+</html>
+
+
